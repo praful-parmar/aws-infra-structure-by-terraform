@@ -2,13 +2,13 @@
 
 module "vpc" {
   source               = "./vpc"
-  vpc_name             = "vpc"
-  cidr_block           = "10.0.0.0/22"
-  total_subnet         = 6
-  public_subnet_count  = 3
-  public_subnet_cidrs  = ["10.0.0.0/25", "10.0.1.0/25", "10.0.2.0/25"]
-  private_subnet_count = 3
-  private_subnet_cidrs = ["10.0.0.128/25", "10.0.1.128/25", "10.0.2.128/25"]
+  vpc_name             = var.vpc_name
+  cidr_block           = var.cidr_block
+  total_subnet         = var.total_subnet
+  public_subnet_count  = var.public_subnet_count
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_count = var.private_subnet_count
+  private_subnet_cidrs = var.private_subnet_cidrs
 }
 
 module "sg" {
@@ -23,14 +23,14 @@ module "loadbalancing" {
   vpc_id              = module.vpc.vpc_id
   security_groups     = module.sg.alb_sg
   subnets             = module.vpc.public_subnet_id
-  healthy_thresold    = 3
-  unhealthy_threshold = 2
-  timeout             = 4
-  interval            = 5
-  tg_port             = 80
-  tg_protocol         = "HTTP"
-  listener_port       = 80
-  listener_protocol   = "HTTP"
+  healthy_thresold    = var.healthy_thresold
+  unhealthy_threshold = var.unhealthy_threshold
+  timeout             = var.timeout
+  interval            = var.interval
+  tg_port             = var.tg_port
+  tg_protocol         = var.tg_protocol
+  listener_port       = var.listener_port
+  listener_protocol   = var.listener_protocol
 }
 
 module "ecs" {
@@ -54,9 +54,9 @@ module "asg" {
   vpc_security_group_ids = module.sg.vm_sg
   userdata_path          = filebase64("./userdata.sh")
   vpc_zone_identifier    = module.vpc.private_subnet_id
-  desired_capacity       = 2
-  max_size               = 5
-  min_size               = 2
+  desired_capacity       = var.desired_capacity
+  max_size               = var.max_size
+  min_size               = var.min_size
   target_group_arns      = module.loadbalancing.target_gp_arn
   iam_instance_profile = module.iam.iam_instance_profile
   ecs_cluster = module.ecs.ecs_cluster
@@ -70,14 +70,23 @@ module "iam" {
 
 module "database" {
   source                 = "./database"
-  db_storage             = 10
-  db_engine_version      = "8.0.23"
-  db_instance_class      = "db.t2.micro"
-  db_name                = "db"
-  db_username            = "admin"
-  db_password            = "password"
+  db_storage             = var.db_storage
+  db_engine_version      = var.db_engine_version
+  db_instance_class      = var.db_instance_class
+  db_name                = var.db_name
+  db_username            = var.db_username
+  db_password            = var.db_password
   db_subnet_group_name   = module.vpc.db_subnet[0]
   vpc_security_group_ids = [module.sg.db_security_group]
-  db_identifier          = "db"
+  db_identifier          = var.db_identifier
   skip_final_snapshot    = true
 }
+
+
+
+
+# yum update -y
+# yum install httpd -y
+# systemctl start httpd
+# systemctl enable httpd
+# echo "<h1>$(hostname -f) -me" > /var/www/html/index.html

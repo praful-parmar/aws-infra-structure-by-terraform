@@ -29,6 +29,7 @@ resource "aws_ecs_task_definition" "task_definition" {
       "image": "nginx:latest", 
       "portMappings": [
         {
+          "hostPort": 80,
           "containerPort": 80
         }
       ],
@@ -65,11 +66,6 @@ resource "aws_ecs_service" "aws-ecs-service" {
   desired_count        = 1
   force_new_deployment = true
 
-  # network_configuration {
-  #   subnets          = var.subnets
-  #   # assign_public_ip = true
-  #   security_groups = var.security_groups
-  # }
 
   load_balancer {
     target_group_arn = var.target_group_arn
